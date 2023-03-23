@@ -17,6 +17,8 @@ class FrequencyGraphWindow(QMainWindow):
         self.mode_selector.addItem("Play mode")
         self.mode_selector.addItem("Circle mode")
         self.mode_selector.addItem("Line mode")
+        self.mode_selector.addItem("Drag mode")
+
         self.mode_selector.currentIndexChanged.connect(self.change_mode)
         layout.addWidget(self.mode_selector, 0, 0)
 
