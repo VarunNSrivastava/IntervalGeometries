@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Microtonal Geometric Scalemaker</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+  
+    canvas {
+      display: block;
+      background-color: #f0f0f0; /* Add this line */
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <label for="modeSelect">Mode:</label>
+    <select id="modeSelect">
+      <option value="play">Play</option>
+      <option value="line">Line</option>
+      <option value="subdivide">Subdivide</option>
+    </select>
+  </div>
+  <div>
+    <label for="distributionSelect">Distribution:</label>
+    <select id="distributionSelect">
+      <option value="linear">Linear</option>
+      <option value="log">Logarithmic</option>
+    </select>
+  </div>
+  <canvas id="scalemakerCanvas" width="800" height="600"></canvas>
+  <script src="scalemaker.js"></script>
+  <script>
+    const modeSelect = document.getElementById('modeSelect');
+    modeSelect.addEventListener('change', function () {
+      switchMode(modeSelect.value);
+    });
+
+    const distributionSelect = document.getElementById('distributionSelect');
+    distributionSelect.addEventListener('change', function () {
+      switchDistribution(distributionSelect.value);
+    });
+  </script>
+</body>
+</html>

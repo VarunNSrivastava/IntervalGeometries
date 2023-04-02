@@ -17,22 +17,22 @@ def _circle_circle_intersection(circle1: QGraphicsEllipseItem, circle2: QGraphic
         intersections = find_path_intersections(path1, path2)
         return intersections
     else:
-        return [] 
-
-def sgn(x):
-    return (x > 0) - (x < 0)
+        return []
 
 
 def _line_line_intersection(line1: QGraphicsLineItem, line2: QGraphicsLineItem) -> list:
-    path1 = line1.shape()
-    path2 = line2.shape()
-    if line1.collidesWithPath(path2):
-        intersections = find_path_intersections(path1, path2)
-        return intersections
+    # QLineF
+    lf1 = line1.line()
+    lf2 = line2.line()
+    intersection_point = QPointF()
+    if lf1.intersect(lf2, intersection_point) == 1:
+        return [intersection_point]
     else:
         return []
 
 def _circle_line_intersection(circle: QGraphicsEllipseItem, line: QGraphicsLineItem) -> list:
+    polys = circle.shape().toSubpathPolygons()
+    # print(f"there are {len(polys)} polygons")
     path1 = circle.shape()
     path2 = line.shape()
     if circle.collidesWithPath(path2):
@@ -48,7 +48,8 @@ def remove_duplicates(intersections, epsilon=5):
             unique_intersections.append(point)
     return unique_intersections
 
-def find_path_intersections(path1, path2):
+def find_path_intersections(path1: QPainterPath, path2: QPainterPath) -> list:
+
     intersections = []
 
     for i, subpath1 in enumerate(path1.toSubpathPolygons()):
@@ -62,7 +63,7 @@ def find_path_intersections(path1, path2):
     # Remove duplicate intersection points
     intersections = remove_duplicates(intersections)
 
-    print(len(intersections))
+    # print(len(intersections))
     return intersections
 
 
@@ -119,6 +120,7 @@ class FrequencyGraph(QGraphicsView):
         self.line_item = None
         self.start_line_point = None
 
+        self.primitives = []
         self.snap_points = []
 
         self._width = 800
@@ -127,11 +129,11 @@ class FrequencyGraph(QGraphicsView):
 
         # tonal center
         self.x_center = 440
-        self.y_center = 440
+        self.y_center = 440 *8
 
         # number of octaves
-        self.x_range = 9
-        self.y_range = 9
+        self.x_range = 15
+        self.y_range = 15
 
         # octaves
         self.x_scale = [self.x_center * (2 ** i) for i in range(-int(self.x_range / 2), 1 + int(self.x_range / 2))]
@@ -200,9 +202,10 @@ class FrequencyGraph(QGraphicsView):
         if self.playing_audio:
             self.stop_playing_audio()
 
-        freq1 = self.map_x_to_frequency(x)
+        freq1 = 0 #self.map_x_to_frequency(x)
         freq2 = self.map_y_to_frequency(y)
         sample_rate = 44100
+        fade_duration = 0.01  # Fade duration in seconds
 
         if duration is None:
             t = np.linspace(0, 1, sample_rate, False)
@@ -210,6 +213,16 @@ class FrequencyGraph(QGraphicsView):
             t = np.linspace(0, duration, int(duration * sample_rate), False)
 
         audio_data = np.sin(freq1 * t * 2 * np.pi) + np.sin(freq2 * t * 2 * np.pi)
+
+        # Apply fade in and fade out effect
+        fade_samples = int(fade_duration * sample_rate)
+        fade_in = np.linspace(0, 1, fade_samples)
+        fade_out = np.linspace(1, 0, fade_samples)
+
+        audio_data[:fade_samples] *= fade_in
+        audio_data[-fade_samples:] *= fade_out
+
+        # Normalize the audio data and convert to int16
         audio_data = audio_data * (2 ** 15 - 1) / np.max(np.abs(audio_data))
         audio_data = audio_data.astype(np.int16)
 
@@ -243,6 +256,12 @@ class FrequencyGraph(QGraphicsView):
     def add_snap_points_from_item(self, item):
         # Iterate through existing items on the graph
         for existing_item in self.scene.items():
+            # for tm in self.scene.collidingItems(existing_item, 1):
+            #
+            #
+            # self.scene.collidingItems()
+            # existing_item.
+
             intersections = find_intersections(item, existing_item)
             # todo: filter out existing "snap points"
 
